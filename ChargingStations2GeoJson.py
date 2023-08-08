@@ -182,6 +182,37 @@ def extract_data_from_kml(input_file, output_file):
 
     logger.debug("Success! Output file contains %s points." % len(features))
 
+
+# load kml files 
+output_filename = "results/charging_stations_{}.geojson".format(time.strftime("%Y%m%d_%H%M%S"))
+extract_data_from_kml(input_file=None,output_file=output_filename)
+
+doc = ET.parse('data_cache/chargy_20230808_111911.kml')
+root = doc.getroot()
+stations = root.findall(".//ns:Placemark", ns)
+features = []
+
+for station in stations:
+    properties = {}
+    station_name = ' '.join(station.find("ns:name", ns).text.split())
+    charging_devices = station.findall("ns:ExtendedData/ns:Data[@name='chargingdevice']/ns:value", ns)
+    print(station_name)
+    print(charging_devices)
+
+test_station = stations[1]
+charging_points = test_station.findall("ns:ExtendedData/ns:Data[@name='chargingdevice']/ns:value",ns)
+n_chargin_point = len(charging_points)
+n_connectors = int(test_station.find("ns:ExtendedData/ns:Data[@name='CPnum']/ns:value", ns).text)
+
+
+
+for station in stations:
+        computed_feature = process_charging_station(station)
+        if computed_feature is not None:
+            features.append(computed_feature)
+
+
+
 def store_to_db():
     try:
         json_filename = os.listdir('results/')[0] 
