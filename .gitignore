@@ -108,3 +108,6 @@ ENV/
 kml*
 data_cache/
 results/
+
+# Python with credentials scripts 
+database_credentials.py
