@@ -1,10 +1,16 @@
+#!/Users/roseren/Documents/CItcomAI/pilot9/wp1 ev charging station collections/citcomAI_venv/bin/python
+
 import argparse
 import time
 import json
+import shutil
+import datetime
 import re
 import requests
 import logging
 import os
+from pymongo import MongoClient
+from pymongo.server_api import ServerApi
 import sys
 import math
 import xml.etree.cElementTree as ET
@@ -16,6 +22,11 @@ ch = logging.StreamHandler(sys.stdout)
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 strict_mode = False
+
+# MongoDB credentials
+MONGO_DB_NAME = 'Chargy_stations'
+MONGO_DB_COLLECTION_NAME = 'EV_stations'
+URI = 'mongodb+srv://madhorza:Inter21071993@cluster0.c3ofuvi.mongodb.net/?retryWrites=true&w=majority'
 
 
 def is_valid_file(parser, arg):
@@ -165,8 +176,34 @@ def extract_data_from_kml(input_file, output_file):
     with open(output_file, "w") as outfile:
         logger.debug("Writing to: %s" % output_file)
         json.dump(export_artifact, outfile)
+    
 
     logger.debug("Success! Output file contains %s points." % len(features))
+
+def store_to_db():
+    try:
+        json_filename = os.listdir('results/')[0] 
+        f = open(os.path.join('results/',json_filename))
+        data = json.load(f)
+        #define datetime to the nearest minute 
+        now = datetime.datetime.now()
+        now = now - datetime.timedelta(minutes = now.minute % 1,
+                                       seconds = now.second,
+                                       microseconds=now.microsecond)
+        data['date_time'] = str(now)
+
+        # dump json in MongoDb
+        client = MongoClient(URI,server_api = ServerApi('1'))
+        db = client[MONGO_DB_NAME]
+        collection = db[MONGO_DB_COLLECTION_NAME]
+        collection.insert_one(data)
+        client.close()
+        print('Data fetched and stored successfully')
+
+    
+    except Exception as e:
+        print(' An error occured: {}'.format(str(e)))
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -195,3 +232,9 @@ if __name__ == "__main__":
     strict_mode = args.strict_mode
 
     extract_data_from_kml(args.infile, args.outfile)
+    store_to_db()
+    # clean directories and files to save space
+    shutil.rmtree('data_cache')
+    shutil.rmtree('results')
+    print('temporary data folders deleted')
+
