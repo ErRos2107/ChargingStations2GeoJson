@@ -1,4 +1,4 @@
-#!/Users/roseren/Documents/CItcomAI/pilot9/wp1 ev charging station collections/citcomAI_venv/bin/python
+#!/Users/roseren/Documents/CItcomAI/wp1_data_collection/citcomAI_venv/bin/python
 
 import argparse
 import time
@@ -16,6 +16,8 @@ import math
 import xml.etree.cElementTree as ET
 from utils.GeoJsonBuilder import GeoJsonBuilder
 from collections import OrderedDict
+from database_credentials import * 
+
 
 ns = {}
 ch = logging.StreamHandler(sys.stdout)
@@ -26,7 +28,7 @@ strict_mode = False
 # MongoDB credentials
 MONGO_DB_NAME = 'Chargy_stations'
 MONGO_DB_COLLECTION_NAME = 'EV_stations'
-URI = 'mongodb+srv://madhorza:Inter21071993@cluster0.c3ofuvi.mongodb.net/?retryWrites=true&w=majority'
+URI = 'mongodb+srv://{}:{}@cluster0.c3ofuvi.mongodb.net/?retryWrites=true&w=majority'.format(MONGO_DB_USERNAME,MONGO_DB_PASSWORD)
 
 
 def is_valid_file(parser, arg):
